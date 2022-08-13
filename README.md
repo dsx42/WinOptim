@@ -20,7 +20,8 @@
 
 ## Blank.ico
 
-本工具所用的 `Blank.ico` 来自 `https://github.com/Chuyu-Team/Dism-Multi-language` 项目
+* 本工具所用的 `Blank.ico` 用于隐藏快捷方式小箭头
+* 提取自 `https://github.com/Chuyu-Team/Dism-Multi-language` 项目
 
 # 参考资料
 
