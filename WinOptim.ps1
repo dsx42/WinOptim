@@ -581,19 +581,19 @@ function CommonOptim {
     #    -Value 1 `
     #    -Type DWord
 
-    #RegWrite -Desc '不允许在开始菜单显示建议' `
-    #    -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
-    #    -Name 'SystemPaneSuggestionsEnabled' `
-    #    -Value 0 `
-    #    -Type DWord
-    #RegWrite -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
-    #    -Name 'SubscribedContent-338388Enabled' `
-    #    -Value 0 `
-    #    -Type DWord
-    #RegWrite -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
-    #    -Name 'SubscribedContent-338389Enabled' `
-    #    -Value 0 `
-    #    -Type DWord
+    RegWrite -Desc '不允许在开始菜单显示建议' `
+        -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
+        -Name 'SystemPaneSuggestionsEnabled' `
+        -Value 0 `
+        -Type DWord
+    RegWrite -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
+        -Name 'SubscribedContent-338388Enabled' `
+        -Value 0 `
+        -Type DWord
+    RegWrite -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
+        -Name 'SubscribedContent-338389Enabled' `
+        -Value 0 `
+        -Type DWord
 
     RegWrite -Desc '关闭在应用商店中查找处理未知扩展名的应用' `
         -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Explorer' `
@@ -604,6 +604,10 @@ function CommonOptim {
     RegWrite -Desc '关闭商店应用推广' `
         -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
         -Name 'PreInstalledAppsEnabled' `
+        -Value 0 `
+        -Type DWord
+    RegWrite -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
+        -Name 'PreInstalledAppsEverEnabled' `
         -Value 0 `
         -Type DWord
 
@@ -630,6 +634,10 @@ function CommonOptim {
         -Name 'SilentInstalledAppsEnabled' `
         -Value 0 `
         -Type DWord
+    RegWrite -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
+        -Name 'OemPreInstalledAppsEnabled' `
+        -Value 0 `
+        -Type DWord
 
     RegWrite -Desc '登录界面默认打开小键盘' `
         -Path 'Registry::HKEY_USERS\.DEFAULT\Control Panel\Keyboard' `
@@ -643,10 +651,10 @@ function CommonOptim {
         -Value 0 `
         -Type DWord `
         -Exclude 11
-    #RegWrite -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\default\Experience\AllowCortana' `
-    #    -Name 'Value' `
-    #    -Value 0 `
-    #    -Type DWord
+    RegWrite -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\default\Experience\AllowCortana' `
+        -Name 'Value' `
+        -Value 0 `
+        -Type DWord
     #RegWrite -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Windows Search' `
     #    -Name 'AllowCortana' `
     #    -Value 0 `
@@ -1275,6 +1283,7 @@ function CommonOptim {
         if ($null -ne $_.DriveLetter) {
             $DriveLetter = $_.DriveLetter
             Disable-ComputerRestore ("${DriveLetter}:") -ErrorAction SilentlyContinue
+            manage-bde -off "${DriveLetter}:"
         }
     }
 
@@ -1352,7 +1361,7 @@ function CommonOptim {
     UninstallApp -Desc '卸载: 闹钟和时钟' -AppName 'Microsoft.WindowsAlarms'
     UninstallApp -Desc '卸载: PowerAutomateDesktop' -AppName 'Microsoft.PowerAutomateDesktop'
     #UninstallApp -Desc '卸载: 照片' -AppName 'Microsoft.Windows.Photos'
-    #UninstallApp -Desc '卸载: 手机' -AppName 'Microsoft.YourPhone'
+    UninstallApp -Desc '卸载: 手机' -AppName 'Microsoft.YourPhone'
     UninstallApp -Desc '卸载: Todo' -AppName 'Microsoft.Todos'
     UninstallApp -Desc '卸载: 邮件和日历' -AppName 'microsoft.windowscommunicationsapps'
     UninstallApp -Desc '卸载: 天气' -AppName 'Microsoft.BingWeather'
@@ -1490,9 +1499,21 @@ function ChangePower {
 }
 
 function MainMenu {
+
+    Clear-Host
+
     $CurrentUser = GetEnabledUser
     $CurrentPower = GetCurrentPower
-    Clear-Host
+    $Options = [ordered]@{
+        '1' = "修改本地帐户 $($CurrentUser.Name) 的密码";
+        '2' = '通用优化';
+        '3' = "切换电源模式(当前为$CurrentPower)";
+        '4' = '磁盘优化';
+        '5' = '创建桌面快捷方式';
+        '6' = '创建开始菜单快捷方式';
+        'q' = '退出'
+    }
+
     if ($script:Debug) {
         Write-Host -Object "=====> Windows 系统优化 v$VersionInfo 调试模式 <====="
     }
@@ -1503,16 +1524,10 @@ function MainMenu {
     Write-Host -Object '================'
     Write-Host -Object '选择要进行的操作'
     Write-Host -Object '================'
-    Write-Host -Object ''
-    Write-Host -Object ("1: 修改本地帐户 $($CurrentUser.Name) 的密码")
-    Write-Host -Object ''
-    Write-Host -Object '2: 通用优化'
-    Write-Host -Object ''
-    Write-Host -Object ("3: 切换电源模式(当前为$CurrentPower)")
-    Write-Host -Object ''
-    Write-Host -Object '4: 磁盘优化'
-    Write-Host -Object ''
-    Write-Host -Object 'q: 退出'
+    foreach ($Option in $Options.GetEnumerator()) {
+        Write-Host -Object ''
+        Write-Host -Object ($Option.Key + ': ' + $Option.Value)
+    }
 
     $InputOption = 'q'
     while ($true) {
@@ -1523,22 +1538,7 @@ function MainMenu {
             Write-Warning -Message '选择无效，请重新输入'
             continue
         }
-        if ('q' -eq $InputOption) {
-            break
-        }
-        if ('1' -eq $InputOption) {
-            break
-        }
-        if ('2' -eq $InputOption) {
-            break
-        }
-        if ('3' -eq $InputOption) {
-            break
-        }
-        if ('4' -eq $InputOption) {
-            break
-        }
-        if ('Debug' -ieq $InputOption) {
+        if ($Options.Contains($InputOption) -or 'Debug' -ieq $InputOption) {
             break
         }
         Write-Host -Object ''
@@ -1552,26 +1552,26 @@ function MainMenu {
         ChangePassword -User $CurrentUser
         Write-Host -Object ''
         Read-Host -Prompt '按确认键返回主菜单'
-        return MainMenu
+        MainMenu
     }
     if ('2' -eq $InputOption) {
         CommonOptim
         Write-Host -Object ''
         Read-Host -Prompt '按确认键返回主菜单'
-        return MainMenu
+        MainMenu
     }
     if ('3' -eq $InputOption) {
         ChangePower
         Write-Host -Object ''
         Read-Host -Prompt '按确认键返回主菜单'
-        return MainMenu
+        MainMenu
     }
     if ('4' -eq $InputOption) {
         Clear-Host
         Get-Volume | Optimize-Volume -NormalPriority -ErrorAction SilentlyContinue
         Write-Host -Object ''
         Read-Host -Prompt '按确认键返回主菜单'
-        return MainMenu
+        MainMenu
     }
     if ('Debug' -ieq $InputOption) {
         $Script:Debug = $true
@@ -1580,7 +1580,7 @@ function MainMenu {
         Add-Content -Path $script:DebugLog -Value '' -Force
         $LogHead = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
         Add-Content -Path $script:DebugLog -Value "$LogHead" -Force
-        return MainMenu
+        MainMenu
     }
 }
 
@@ -1594,6 +1594,7 @@ RequireAdmin
 
 Clear-Host
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
+$ProgressPreference = 'SilentlyContinue'
 $Host.UI.RawUI.WindowTitle = 'Windows 系统优化'
 Set-Location -Path $PSScriptRoot
 
@@ -1605,6 +1606,3 @@ if (!$SystemInfo.Caption.Contains('10') -and !$SystemInfo.Caption.Contains('11')
 }
 
 MainMenu
-
-Write-Host -Object ''
-Read-Host -Prompt '按回车键关闭此窗口'
