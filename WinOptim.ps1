@@ -539,6 +539,72 @@ function UninstallXbox {
         -Type DWord
 }
 
+function OptimPowerCfg {
+
+    $Schemes = @(
+        # 节能模式
+        'a1841308-3541-4fab-bc81-f71556f20b4a',
+        # 平衡模式
+        '381b4222-f694-41f0-9685-ff5bb260df2e',
+        # 高性能模式
+        '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'
+    )
+
+    $Subs = @{
+        # 无线适配器设置
+        '19cbb8fa-5279-450e-9fac-8a3d5fedd0c1' = @{
+            # 节能模式: 最高性能
+            '12bbebe6-58d6-4636-95bb-3217ef867c1a' = '0'
+        }
+        # 睡眠
+        '238c9fa8-0aad-41ed-83f4-97be242c8f20' = @{
+            # 在此时间后睡眠: 不进入睡眠
+            '29f6c1db-86da-48c5-9fdb-f2b67b1f44da' = '0';
+            # 在此时间后休眠: 不进入休眠
+            '9d7815a6-7ee4-497e-8888-515a05f02364' = '0'
+        };
+        # 英特尔显卡设置
+        '44f3beca-a7c0-460e-9df2-bb8b99e0cba6' = @{
+            # 英特尔显卡电源计划: 最高性能
+            '3619c3f2-afb2-4afc-b0e9-e7fef372de36' = '2'
+        };
+        # 多媒体设置
+        '9596fb26-9850-41fd-ac3e-f7c3c00afd4b' = @{
+            # 视频播放质量补偿: 视频播放性能补偿
+            '10778347-1370-4ee0-8bbd-33bdacaade49' = '1'
+            # 播放视频时: 优化视频质量
+            '34c7b99f-9a6d-4b3c-8dc7-b6693b78cef4' = '0'
+        };
+        # 电源按钮和盖子
+        '4f971e89-eebd-4455-a8de-9e59040e7347' = @{
+            # 合盖动作: 什么都不做
+            '5ca83367-6e45-459f-a27b-476b1d01c936' = '0'
+        }
+    }
+
+    foreach ($Scheme in $Schemes) {
+        foreach ($Sub in $Subs.GetEnumerator()) {
+            foreach ($Setting in $Sub.Value.GetEnumerator()) {
+                POWERCFG /SETACVALUEINDEX $Scheme $Sub.Key $Setting.Key $Setting.Value
+            }
+        }
+    }
+}
+
+function OptimDisk {
+
+    Get-Volume | ForEach-Object {
+        if ($null -ne $_.DriveLetter) {
+            $DriveLetter = $_.DriveLetter
+            Disable-ComputerRestore ("${DriveLetter}:") -ErrorAction SilentlyContinue
+            Optimize-Volume -InputObject $_ -NormalPriority -ErrorAction SilentlyContinue
+            manage-bde -off "${DriveLetter}:" | Out-Null
+        }
+    }
+
+    vssadmin Delete Shadows /All /Quiet | Out-Null
+}
+
 function CommonOptim {
 
     RegWrite -Desc '隐藏任务栏中的搜索框' `
@@ -687,18 +753,6 @@ function CommonOptim {
         -Name '29' `
         -Value (GetBlankIconPath) `
         -Type String
-
-    #RegWrite -Desc '隐藏可执行文件小盾牌' `
-    #    -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons' `
-    #    -Name '77' `
-    #    -Value (GetBlankIconPath) `
-    #    -Type String
-
-    #RegWrite -Desc '隐藏 NTFS 蓝色双箭头压缩标识' `
-    #    -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons' `
-    #    -Name '179' `
-    #    -Value (GetBlankIconPath) `
-    #    -Type String
 
     RegRename -Desc 'Shift 右键显示在此处打开 PowerShell 窗口' `
         -Path 'Registry::HKEY_CLASSES_ROOT\Directory\Background\shell\Powershell' `
@@ -1273,68 +1327,12 @@ function CommonOptim {
         -Type DWord
 
     Write-Host -Object ''
-    Write-Host -Object '磁盘优化'
-    Get-Volume | Optimize-Volume -NormalPriority -ErrorAction SilentlyContinue
-
-    Write-Host -Object ''
-    Write-Host -Object '删除系统还原点并禁用系统还原'
-    vssadmin Delete Shadows /All /Quiet
-    Get-Volume | ForEach-Object {
-        if ($null -ne $_.DriveLetter) {
-            $DriveLetter = $_.DriveLetter
-            Disable-ComputerRestore ("${DriveLetter}:") -ErrorAction SilentlyContinue
-            manage-bde -off "${DriveLetter}:"
-        }
-    }
+    Write-Host -Object '磁盘优化、删除系统还原点并禁用系统还原、关闭 BitLocker'
+    OptimDisk
 
     Write-Host -Object ''
     Write-Host -Object '优化电源设置'
-    $Schemes = @(
-        # 节能模式
-        'a1841308-3541-4fab-bc81-f71556f20b4a',
-        # 平衡模式
-        '381b4222-f694-41f0-9685-ff5bb260df2e',
-        # 高性能模式
-        '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'
-    )
-    $Subs = @{
-        # 无线适配器设置
-        '19cbb8fa-5279-450e-9fac-8a3d5fedd0c1' = @{
-            # 节能模式: 最高性能
-            '12bbebe6-58d6-4636-95bb-3217ef867c1a' = '0'
-        }
-        # 睡眠
-        '238c9fa8-0aad-41ed-83f4-97be242c8f20' = @{
-            # 在此时间后睡眠: 不进入睡眠
-            '29f6c1db-86da-48c5-9fdb-f2b67b1f44da' = '0';
-            # 在此时间后休眠: 不进入休眠
-            '9d7815a6-7ee4-497e-8888-515a05f02364' = '0'
-        };
-        # 英特尔显卡设置
-        '44f3beca-a7c0-460e-9df2-bb8b99e0cba6' = @{
-            # 英特尔显卡电源计划: 最高性能
-            '3619c3f2-afb2-4afc-b0e9-e7fef372de36' = '2'
-        };
-        # 多媒体设置
-        '9596fb26-9850-41fd-ac3e-f7c3c00afd4b' = @{
-            # 视频播放质量补偿: 视频播放性能补偿
-            '10778347-1370-4ee0-8bbd-33bdacaade49' = '1'
-            # 播放视频时: 优化视频质量
-            '34c7b99f-9a6d-4b3c-8dc7-b6693b78cef4' = '0'
-        };
-        # 电源按钮和盖子
-        '4f971e89-eebd-4455-a8de-9e59040e7347' = @{
-            # 合盖动作: 什么都不做
-            '5ca83367-6e45-459f-a27b-476b1d01c936' = '0'
-        }
-    }
-    foreach ($Scheme in $Schemes) {
-        foreach ($Sub in $Subs.GetEnumerator()) {
-            foreach ($Setting in $Sub.Value.GetEnumerator()) {
-                POWERCFG /SETACVALUEINDEX $Scheme $Sub.Key $Setting.Key $Setting.Value
-            }
-        }
-    }
+    OptimPowerCfg
     POWERCFG /SETACTIVE '381b4222-f694-41f0-9685-ff5bb260df2e'
 
     UninstallApp -Desc '卸载: Cortana' -AppName 'Microsoft.549981C3F5F10'
@@ -1455,6 +1453,9 @@ function ChangePassword {
 }
 
 function ChangePower {
+
+    Clear-Host
+
     $CurrentPower = GetCurrentPower
     Write-Host -Object ''
     Write-Host -Object '===================='
@@ -1476,18 +1477,21 @@ function ChangePower {
             continue
         }
         if ('1' -eq $InputOption) {
+            OptimPowerCfg
             POWERCFG /SETACTIVE 'a1841308-3541-4fab-bc81-f71556f20b4a'
             Write-Host -Object ''
             Write-Host -Object '电源模式已设为节能模式'
             return
         }
         if ('2' -eq $InputOption) {
+            OptimPowerCfg
             POWERCFG /SETACTIVE '381b4222-f694-41f0-9685-ff5bb260df2e'
             Write-Host -Object ''
             Write-Host -Object '电源模式已设为平衡模式'
             return
         }
         if ('3' -eq $InputOption) {
+            OptimPowerCfg
             POWERCFG /SETACTIVE '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'
             Write-Host -Object ''
             Write-Host -Object '电源模式已设为高性能模式'
@@ -1498,6 +1502,31 @@ function ChangePower {
     }
 }
 
+function CreateShortcut {
+    param ($Type)
+
+    Clear-Host
+
+    $TargetPath = [System.Environment]::GetFolderPath([Environment+SpecialFolder]::Programs) + '\WinOptim.lnk'
+    if ($Type -eq 1) {
+        $TargetPath = [System.Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop) + '\WinOptim.lnk'
+    }
+
+    if (Test-Path -Path "$TargetPath" -PathType Leaf) {
+        Remove-Item -Path "$TargetPath" -Force
+    }
+
+    $WScriptShell = New-Object -ComObject 'WScript.Shell'
+    $Shortcut = $WScriptShell.CreateShortcut("$TargetPath")
+    $Shortcut.TargetPath = "$PSScriptRoot\WinOptim.cmd"
+    $Shortcut.WindowStyle = 1
+    $Shortcut.WorkingDirectory = "$PSScriptRoot"
+    $Shortcut.Save()
+
+    Write-Host -Object ''
+    Write-Host -Object '快捷方式创建完成'
+}
+
 function MainMenu {
 
     Clear-Host
@@ -1505,25 +1534,27 @@ function MainMenu {
     $CurrentUser = GetEnabledUser
     $CurrentPower = GetCurrentPower
     $Options = [ordered]@{
-        '1' = "修改本地帐户 $($CurrentUser.Name) 的密码";
-        '2' = '通用优化';
-        '3' = "切换电源模式(当前为$CurrentPower)";
-        '4' = '磁盘优化';
-        '5' = '创建桌面快捷方式';
-        '6' = '创建开始菜单快捷方式';
+        '1' = '通用优化';
+        '2' = '磁盘优化';
+        '3' = "切换电源模式 (当前为 $CurrentPower)";
+        '4' = "修改本地帐户 $($CurrentUser.Name) 的密码";
+        '5' = '磁盘管理';
+        '6' = '创建桌面快捷方式';
+        '7' = '创建开始菜单快捷方式';
         'q' = '退出'
     }
 
+    Write-Host -Object ''
     if ($script:Debug) {
-        Write-Host -Object "=====> Windows 系统优化 v$VersionInfo 调试模式 <====="
+        Write-Host -Object "=====> WinOptim 调试模式 v$VersionInfo https://github.com/dsx42/WinOptim <====="
     }
     else {
-        Write-Host -Object "=====> Windows 系统优化 v$VersionInfo <====="
+        Write-Host -Object "=====> WinOptim v$VersionInfo https://github.com/dsx42/WinOptim <====="
     }
     Write-Host -Object ''
-    Write-Host -Object '================'
-    Write-Host -Object '选择要进行的操作'
-    Write-Host -Object '================'
+    Write-Host -Object '=================='
+    Write-Host -Object '请选择要进行的操作'
+    Write-Host -Object '=================='
     foreach ($Option in $Options.GetEnumerator()) {
         Write-Host -Object ''
         Write-Host -Object ($Option.Key + ': ' + $Option.Value)
@@ -1549,13 +1580,18 @@ function MainMenu {
         [System.Environment]::Exit(0)
     }
     if ('1' -eq $InputOption) {
-        ChangePassword -User $CurrentUser
+        CommonOptim
         Write-Host -Object ''
         Read-Host -Prompt '按确认键返回主菜单'
         MainMenu
     }
     if ('2' -eq $InputOption) {
-        CommonOptim
+        Clear-Host
+        Write-Host -Object ''
+        Write-Host -Object '正在优化磁盘，耗时较长，请勿关闭此窗口'
+        OptimDisk
+        Write-Host -Object ''
+        Write-Host -Object '磁盘优化完成'
         Write-Host -Object ''
         Read-Host -Prompt '按确认键返回主菜单'
         MainMenu
@@ -1567,8 +1603,26 @@ function MainMenu {
         MainMenu
     }
     if ('4' -eq $InputOption) {
+        ChangePassword -User $CurrentUser
+        Write-Host -Object ''
+        Read-Host -Prompt '按确认键返回主菜单'
+        MainMenu
+    }
+    if ('5' -eq $InputOption) {
         Clear-Host
-        Get-Volume | Optimize-Volume -NormalPriority -ErrorAction SilentlyContinue
+        diskmgmt.msc
+        Write-Host -Object ''
+        Read-Host -Prompt '按确认键返回主菜单'
+        MainMenu
+    }
+    if ('6' -eq $InputOption) {
+        CreateShortcut -Type 1
+        Write-Host -Object ''
+        Read-Host -Prompt '按确认键返回主菜单'
+        MainMenu
+    }
+    if ('7' -eq $InputOption) {
+        CreateShortcut -Type 2
         Write-Host -Object ''
         Read-Host -Prompt '按确认键返回主菜单'
         MainMenu
@@ -1590,19 +1644,18 @@ if ($Version) {
     return $VersionInfo
 }
 
-RequireAdmin
-
-Clear-Host
-$PSDefaultParameterValues['*:Encoding'] = 'utf8'
-$ProgressPreference = 'SilentlyContinue'
-$Host.UI.RawUI.WindowTitle = 'Windows 系统优化'
-Set-Location -Path $PSScriptRoot
-
 $SystemInfo = Get-CimInstance -ClassName Win32_OperatingSystem
 
 if (!$SystemInfo.Caption.Contains('10') -and !$SystemInfo.Caption.Contains('11')) {
     Write-Warning -Message ('不支持 ' + $SystemInfo.Caption)
     [System.Environment]::Exit(0)
 }
+
+RequireAdmin
+
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+$ProgressPreference = 'SilentlyContinue'
+$Host.UI.RawUI.WindowTitle = "WinOptim v$VersionInfo"
+Set-Location -Path $PSScriptRoot
 
 MainMenu
