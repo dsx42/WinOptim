@@ -14,14 +14,14 @@
 function GetVertion {
     $ProductJsonPath = "$PSScriptRoot\product.json"
 
-    if (!(Test-Path -Path $ProductJsonPath -PathType Leaf)) {
+    if (!(Test-Path -Path "$ProductJsonPath" -PathType Leaf)) {
         Write-Warning -Message ("$ProductJsonPath 不存在")
         [System.Environment]::Exit(0)
     }
 
     $ProductInfo = $null
     try {
-        $ProductInfo = Get-Content -Path $ProductJsonPath | ConvertFrom-Json
+        $ProductInfo = Get-Content -Path "$ProductJsonPath" | ConvertFrom-Json
     }
     catch {
         Write-Warning -Message ("$ProductJsonPath 解析失败")
@@ -47,10 +47,10 @@ $DebugLog = "$PSScriptRoot\debug.log"
 function ConfirmBefore {
     $Answer = Read-Host -Prompt '问题是否存在 (0: 否, 1: 是)'
     if ('1' -eq $Answer) {
-        Add-Content -Path $script:DebugLog -Value '问题存在' -Force
+        Add-Content -Path "$script:DebugLog" -Value '问题存在' -Force
     }
     else {
-        Add-Content -Path $script:DebugLog -Value '问题不存在' -Force
+        Add-Content -Path "$script:DebugLog" -Value '问题不存在' -Force
     }
 }
 
@@ -58,10 +58,10 @@ function ConfirmAfter {
     #Stop-Process -Name 'explorer' -Force -ErrorAction SilentlyContinue
     $Answer = Read-Host -Prompt '问题是否解决 (0: 否, 1: 是)'
     if ('1' -eq $Answer) {
-        Add-Content -Path $script:DebugLog -Value '问题已解决' -Force
+        Add-Content -Path "$script:DebugLog" -Value '问题已解决' -Force
     }
     else {
-        Add-Content -Path $script:DebugLog -Value '问题未解决' -Force
+        Add-Content -Path "$script:DebugLog" -Value '问题未解决' -Force
     }
 }
 
@@ -85,29 +85,29 @@ function RegWrite {
     }
     if ($script:Debug) {
         if ($Desc) {
-            Add-Content -Path $script:DebugLog -Value '' -Force
-            Add-Content -Path $script:DebugLog -Value "RegWrite Desc: $Desc" -Force
+            Add-Content -Path "$script:DebugLog" -Value '' -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegWrite Desc: $Desc" -Force
         }
-        Add-Content -Path $script:DebugLog -Value "RegWrite Path: $Path" -Force
-        Add-Content -Path $script:DebugLog -Value "RegWrite Name: $Name" -Force
-        Add-Content -Path $script:DebugLog -Value "RegWrite Value: $Value" -Force
-        Add-Content -Path $script:DebugLog -Value "RegWrite Type: $Type" -Force
+        Add-Content -Path "$script:DebugLog" -Value "RegWrite Path: $Path" -Force
+        Add-Content -Path "$script:DebugLog" -Value "RegWrite Name: $Name" -Force
+        Add-Content -Path "$script:DebugLog" -Value "RegWrite Value: $Value" -Force
+        Add-Content -Path "$script:DebugLog" -Value "RegWrite Type: $Type" -Force
         ConfirmBefore
     }
 
-    if (!(Test-Path -Path $Path -PathType Container)) {
+    if (!(Test-Path -Path "$Path" -PathType Container)) {
         Write-Warning -Message ("RegWrite: 不存在 Path=$Path, Name=$Name, Value=$Value, Type=$Type")
         if ($script:Debug) {
-            Add-Content -Path $script:DebugLog -Value "RegWrite 不存在 Path=$Path" -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegWrite 不存在 Path=$Path" -Force
         }
         try {
-            New-Item -Path $Path -Force -ErrorAction Stop | Out-Null
+            New-Item -Path "$Path" -Force -ErrorAction Stop | Out-Null
         }
         catch {
             Write-Host -Object ("$Desc 失败, 无权创建 Path=$Path, Name=$Name, Value=$Value, Type=$Type") `
                 -ForegroundColor Red
             if ($script:Debug) {
-                Add-Content -Path $script:DebugLog -Value "RegWrite 无权创建 Path=$Path" -Force
+                Add-Content -Path "$script:DebugLog" -Value "RegWrite 无权创建 Path=$Path" -Force
                 ConfirmAfter
             }
             return
@@ -117,17 +117,17 @@ function RegWrite {
         if ($null -eq $Name -or '' -eq $Name) {
             Write-Warning -Message ("RegWrite: 已存在 Path=$Path, Name=$Name, Value=$Value, Type=$Type")
             if ($script:Debug) {
-                Add-Content -Path $script:DebugLog -Value "RegWrite 已存在 Path=$Path" -Force
+                Add-Content -Path "$script:DebugLog" -Value "RegWrite 已存在 Path=$Path" -Force
                 ConfirmAfter
             }
             return
         }
     }
 
-    if (!(Test-Path -Path $Path -PathType Container)) {
+    if (!(Test-Path -Path "$Path" -PathType Container)) {
         Write-Host -Object ("$Desc 失败, 不存在 Path=$Path, Name=$Name, Value=$Value, Type=$Type") -ForegroundColor Red
         if ($script:Debug) {
-            Add-Content -Path $script:DebugLog -Value "RegWrite 不存在 Path=$Path" -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegWrite 不存在 Path=$Path" -Force
             ConfirmAfter
         }
         return
@@ -142,7 +142,7 @@ function RegWrite {
 
     $Property = $null
     try {
-        $Property = Get-ItemProperty -Path $Path -Name $Name -ErrorAction Stop
+        $Property = Get-ItemProperty -Path "$Path" -Name $Name -ErrorAction Stop
     }
     catch {
     }
@@ -151,14 +151,14 @@ function RegWrite {
         if ('0' -eq "$Value") {
             Write-Warning -Message ("RegWrite: 不存在 Name=$Name, Path=$Path, Value=$Value, Type=$Type")
             if ($script:Debug) {
-                Add-Content -Path $script:DebugLog -Value "RegWrite 不存在 Name=$Name" -Force
+                Add-Content -Path "$script:DebugLog" -Value "RegWrite 不存在 Name=$Name" -Force
             }
         }
     }
     else {
         $PropertyValue = $null
         try {
-            $PropertyValue = Get-ItemPropertyValue -Path $Path -Name $Name -ErrorAction Stop
+            $PropertyValue = Get-ItemPropertyValue -Path "$Path" -Name $Name -ErrorAction Stop
         }
         catch {
         }
@@ -167,7 +167,7 @@ function RegWrite {
             if ('0' -eq "$Value") {
                 Write-Warning -Message ("RegWrite: 旧值不存在, Value=$Value, Path=$Path, Name=$Name, Type=$Type")
                 if ($script:Debug) {
-                    Add-Content -Path $script:DebugLog -Value "RegWrite 旧值不存在, Name=$Name" -Force
+                    Add-Content -Path "$script:DebugLog" -Value "RegWrite 旧值不存在, Name=$Name" -Force
                 }
             }
         }
@@ -175,19 +175,19 @@ function RegWrite {
             if ("$PropertyValue" -eq "$Value") {
                 Write-Warning -Message ("RegWrite: 和旧值相等, Value=$Value, Path=$Path, Name=$Name, Type=$Type")
                 if ($script:Debug) {
-                    Add-Content -Path $script:DebugLog -Value "RegWrite 和旧值相等, Value=$Value, Name=$Name" -Force
+                    Add-Content -Path "$script:DebugLog" -Value "RegWrite 和旧值相等, Value=$Value, Name=$Name" -Force
                 }
             }
         }
     }
 
     try {
-        Set-ItemProperty -Path $Path -Name $Name -Value $Value -Force -Type $Type -ErrorAction Stop
+        Set-ItemProperty -Path "$Path" -Name $Name -Value $Value -Force -Type $Type -ErrorAction Stop
     }
     catch {
         Write-Host -Object ("$Desc 失败, 无权修改 Name=$Name, Path=$Path, Value=$Value, Type=$Type") -ForegroundColor Red
         if ($script:Debug) {
-            Add-Content -Path $script:DebugLog -Value "RegWrite 无权修改 Name=$Name" -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegWrite 无权修改 Name=$Name" -Force
         }
     }
 
@@ -214,18 +214,18 @@ function RegDelete {
     }
     if ($script:Debug) {
         if ($Desc) {
-            Add-Content -Path $script:DebugLog -Value '' -Force
-            Add-Content -Path $script:DebugLog -Value "RegDelete Desc: $Desc" -Force
+            Add-Content -Path "$script:DebugLog" -Value '' -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegDelete Desc: $Desc" -Force
         }
-        Add-Content -Path $script:DebugLog -Value "RegDelete Path: $Path" -Force
-        Add-Content -Path $script:DebugLog -Value "RegDelete Name: $Name" -Force
+        Add-Content -Path "$script:DebugLog" -Value "RegDelete Path: $Path" -Force
+        Add-Content -Path "$script:DebugLog" -Value "RegDelete Name: $Name" -Force
         ConfirmBefore
     }
 
-    if (!(Test-Path -Path $Path -PathType Container)) {
+    if (!(Test-Path -Path "$Path" -PathType Container)) {
         Write-Warning -Message ("RegDelete: 不存在 Path=$Path, Name=$Name")
         if ($script:Debug) {
-            Add-Content -Path $script:DebugLog -Value "RegDelete 不存在 Path=$Path" -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegDelete 不存在 Path=$Path" -Force
             ConfirmAfter
         }
         return
@@ -233,12 +233,12 @@ function RegDelete {
 
     if ($null -eq $Name -or '' -eq $Name) {
         try {
-            Remove-Item -Path $Path -Recurse -Force -ErrorAction Stop
+            Remove-Item -Path "$Path" -Recurse -Force -ErrorAction Stop
         }
         catch {
             Write-Host -Object ("$Desc 失败, 无权删除 Path=$Path, Name=$Name") -ForegroundColor Red
             if ($script:Debug) {
-                Add-Content -Path $script:DebugLog -Value "RegDelete 无权删除 Path=$Path" -Force
+                Add-Content -Path "$script:DebugLog" -Value "RegDelete 无权删除 Path=$Path" -Force
             }
         }
         if ($script:Debug) {
@@ -249,7 +249,7 @@ function RegDelete {
 
     $Property = $null
     try {
-        $Property = Get-ItemProperty -Path $Path -Name $Name -ErrorAction Stop
+        $Property = Get-ItemProperty -Path "$Path" -Name $Name -ErrorAction Stop
     }
     catch {
     }
@@ -257,9 +257,9 @@ function RegDelete {
     if ($null -eq $Property -or '' -eq $Property) {
         Write-Warning -Message ("RegDelete: 不存在 Name=$Name, Path=$Path")
         if ($script:Debug) {
-            Add-Content -Path $script:DebugLog -Value "RegDelete 不存在 Name=$Name" -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegDelete 不存在 Name=$Name" -Force
         }
-        Remove-ItemProperty -Path $Path -Name $Name -Force -ErrorAction SilentlyContinue
+        Remove-ItemProperty -Path "$Path" -Name $Name -Force -ErrorAction SilentlyContinue
         if ($script:Debug) {
             ConfirmAfter
         }
@@ -268,7 +268,7 @@ function RegDelete {
 
     $PropertyValue = $null
     try {
-        $PropertyValue = Get-ItemPropertyValue -Path $Path -Name $Name -ErrorAction Stop
+        $PropertyValue = Get-ItemPropertyValue -Path "$Path" -Name $Name -ErrorAction Stop
     }
     catch {
     }
@@ -276,23 +276,23 @@ function RegDelete {
     if ($null -eq $PropertyValue -or '' -eq $PropertyValue) {
         Write-Warning -Message ("RegDelete: 旧值不存在, Path=$Path, Name=$Name")
         if ($script:Debug) {
-            Add-Content -Path $script:DebugLog -Value "RegDelete 旧值不存在, Name=$Name" -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegDelete 旧值不存在, Name=$Name" -Force
         }
     }
     elseif ('0' -eq "$PropertyValue") {
         Write-Warning -Message ("RegDelete: 旧值为 0, Path=$Path, Name=$Name")
         if ($script:Debug) {
-            Add-Content -Path $script:DebugLog -Value "RegDelete 旧值为 0, Name=$Name" -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegDelete 旧值为 0, Name=$Name" -Force
         }
     }
 
     try {
-        Remove-ItemProperty -Path $Path -Name $Name -Force -ErrorAction Stop
+        Remove-ItemProperty -Path "$Path" -Name $Name -Force -ErrorAction Stop
     }
     catch {
         Write-Host -Object ("$Desc 失败, 无权删除 Name=$Name, Path=$Path") -ForegroundColor Red
         if ($script:Debug) {
-            Add-Content -Path $script:DebugLog -Value "RegDelete 旧值为 0, 无权删除 Name=$Name" -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegDelete 旧值为 0, 无权删除 Name=$Name" -Force
         }
     }
 
@@ -320,20 +320,20 @@ function RegRename {
     }
     if ($script:Debug) {
         if ($Desc) {
-            Add-Content -Path $script:DebugLog -Value '' -Force
-            Add-Content -Path $script:DebugLog -Value "RegRename Desc: $Desc" -Force
+            Add-Content -Path "$script:DebugLog" -Value '' -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegRename Desc: $Desc" -Force
         }
-        Add-Content -Path $script:DebugLog -Value "RegRename Path: $Path" -Force
-        Add-Content -Path $script:DebugLog -Value "RegRename Name: $Name" -Force
-        Add-Content -Path $script:DebugLog -Value "RegRename NewName: $NewName" -Force
+        Add-Content -Path "$script:DebugLog" -Value "RegRename Path: $Path" -Force
+        Add-Content -Path "$script:DebugLog" -Value "RegRename Name: $Name" -Force
+        Add-Content -Path "$script:DebugLog" -Value "RegRename NewName: $NewName" -Force
         ConfirmBefore
     }
 
-    if (!(Test-Path -Path $Path -PathType Container)) {
+    if (!(Test-Path -Path "$Path" -PathType Container)) {
         Write-Host -Object ("$Desc 失败, 不存在 Path=$Path, Name=$Name, NewName=$NewName") `
             -ForegroundColor Red
         if ($script:Debug) {
-            Add-Content -Path $script:DebugLog -Value "RegRename 不存在 Path=$Path" -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegRename 不存在 Path=$Path" -Force
             ConfirmAfter
         }
         return
@@ -341,14 +341,14 @@ function RegRename {
 
     $Property = $null
     try {
-        $Property = Get-ItemProperty -Path $Path -Name $Name -ErrorAction Stop
+        $Property = Get-ItemProperty -Path "$Path" -Name $Name -ErrorAction Stop
     }
     catch {
     }
 
     $NewProperty = $null
     try {
-        $NewProperty = Get-ItemProperty -Path $Path -Name $NewName -ErrorAction Stop
+        $NewProperty = Get-ItemProperty -Path "$Path" -Name $NewName -ErrorAction Stop
     }
     catch {
     }
@@ -358,7 +358,7 @@ function RegRename {
         if ($null -ne $NewProperty -and '' -ne $NewProperty) {
             Write-Warning -Message ("RegRename: 不存在 Name=$Name, 已存在 NewName=$NewName, Path=$Path")
             if ($script:Debug) {
-                Add-Content -Path $script:DebugLog -Value "RegRename 不存在 Name=$Name, 已存在 NewName=$NewName" -Force
+                Add-Content -Path "$script:DebugLog" -Value "RegRename 不存在 Name=$Name, 已存在 NewName=$NewName" -Force
                 ConfirmAfter
             }
             return
@@ -367,7 +367,7 @@ function RegRename {
         Write-Host -Object ("$Desc 失败, 不存在 Name=$Name, Path=$Path, NewName=$NewName") `
             -ForegroundColor Red
         if ($script:Debug) {
-            Add-Content -Path $script:DebugLog -Value "RegRename 不存在 Name=$Name" -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegRename 不存在 Name=$Name" -Force
             ConfirmAfter
         }
         return
@@ -375,13 +375,13 @@ function RegRename {
 
     if ($null -eq $NewProperty -or '' -eq $NewProperty) {
         try {
-            Rename-ItemProperty -Path $Path -Name $Name -NewName $NewName -Force -ErrorAction Stop
+            Rename-ItemProperty -Path "$Path" -Name $Name -NewName $NewName -Force -ErrorAction Stop
         }
         catch {
             Write-Host -Object ("$Desc 失败, 无权重命名 Name=$Name, Path=$Path, NewName=$NewName") `
                 -ForegroundColor Red
             if ($script:Debug) {
-                Add-Content -Path $script:DebugLog -Value "RegRename 无权重命名 Name=$Name" -Force
+                Add-Content -Path "$script:DebugLog" -Value "RegRename 无权重命名 Name=$Name" -Force
             }
         }
         if ($script:Debug) {
@@ -392,16 +392,16 @@ function RegRename {
 
     Write-Warning -Message ("RegRename: 已存在 NewName=$NewName, Path=$Path, Name=$Name")
     if ($script:Debug) {
-        Add-Content -Path $script:DebugLog -Value "RegRename 已存在 NewName=$NewName" -Force
+        Add-Content -Path "$script:DebugLog" -Value "RegRename 已存在 NewName=$NewName" -Force
     }
     try {
-        Remove-ItemProperty -Path $Path -Name $Name -Force -ErrorAction Stop
+        Remove-ItemProperty -Path "$Path" -Name $Name -Force -ErrorAction Stop
     }
     catch {
         Write-Host -Object ("$Desc 失败, 无权删除 Name=$Name, Path=$Path, NewName=$NewName") `
             -ForegroundColor Red
         if ($script:Debug) {
-            Add-Content -Path $script:DebugLog -Value "RegRename 无权删除 Name=$Name" -Force
+            Add-Content -Path "$script:DebugLog" -Value "RegRename 无权删除 Name=$Name" -Force
         }
     }
 
@@ -413,7 +413,7 @@ function RegRename {
 function GetBlankIconPath {
 
     $BlankIconFile = [System.Environment]::ExpandEnvironmentVariables('%systemroot%\Blank.ico')
-    if (Test-Path -Path $BlankIconFile -PathType Leaf) {
+    if (Test-Path -Path "$BlankIconFile" -PathType Leaf) {
         return '%systemroot%\Blank.ico'
     }
 
@@ -444,10 +444,10 @@ function UninstallApp {
     }
     if ($script:Debug) {
         if ($Desc) {
-            Add-Content -Path $script:DebugLog -Value '' -Force
-            Add-Content -Path $script:DebugLog -Value "UninstallApp Desc: $Desc" -Force
+            Add-Content -Path "$script:DebugLog" -Value '' -Force
+            Add-Content -Path "$script:DebugLog" -Value "UninstallApp Desc: $Desc" -Force
         }
-        Add-Content -Path $script:DebugLog -Value "UninstallApp AppName: $AppName" -Force
+        Add-Content -Path "$script:DebugLog" -Value "UninstallApp AppName: $AppName" -Force
         ConfirmBefore
     }
 
@@ -455,7 +455,7 @@ function UninstallApp {
     if (!$App) {
         Write-Warning -Message "UninstallApp: $AppName 不存在"
         if ($script:Debug) {
-            Add-Content -Path $script:DebugLog -Value "UninstallApp 不存在 AppName=$AppName" -Force
+            Add-Content -Path "$script:DebugLog" -Value "UninstallApp 不存在 AppName=$AppName" -Force
             ConfirmAfter
         }
         return
@@ -467,7 +467,7 @@ function UninstallApp {
     catch {
         Write-Host -Object ("$Desc 失败, 无权删除 AppName=$AppName") -ForegroundColor Red
         if ($script:Debug) {
-            Add-Content -Path $script:DebugLog -Value "UninstallApp 无权删除 AppName=$AppName" -Force
+            Add-Content -Path "$script:DebugLog" -Value "UninstallApp 无权删除 AppName=$AppName" -Force
         }
     }
 
@@ -485,12 +485,12 @@ function UninstallOneDrive {
     Start-Sleep -Seconds 3
 
     $OneDrivePath = "$env:SYSTEMROOT\SysWOW64\OneDriveSetup.exe"
-    if (!(Test-Path -Path $OneDrivePath -PathType Leaf)) {
+    if (!(Test-Path -Path "$OneDrivePath" -PathType Leaf)) {
         $OneDrivePath = "$env:SYSTEMROOT\System32\OneDriveSetup.exe"
     }
 
-    if (Test-Path -Path $OneDrivePath -PathType Leaf) {
-        Start-Process -FilePath $OneDrivePath -ArgumentList '/uninstall' -NoNewWindow -Wait
+    if (Test-Path -Path "$OneDrivePath" -PathType Leaf) {
+        Start-Process -FilePath "$OneDrivePath" -ArgumentList '/uninstall' -NoNewWindow -Wait
         Start-Sleep -Seconds 3
         Stop-Process -Name 'explorer' -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 3
@@ -641,11 +641,11 @@ function CommonOptim {
         -Value 1 `
         -Type DWord
 
-    #RegWrite -Desc '使开始菜单、任务栏、操作中心透明' `
-    #    -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize' `
-    #    -Name 'EnableTransparency' `
-    #    -Value 1 `
-    #    -Type DWord
+    RegWrite -Desc '使开始菜单、任务栏、操作中心透明' `
+        -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize' `
+        -Name 'EnableTransparency' `
+        -Value 1 `
+        -Type DWord
 
     RegWrite -Desc '不允许在开始菜单显示建议' `
         -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
@@ -677,17 +677,17 @@ function CommonOptim {
         -Value 0 `
         -Type DWord
 
-    #RegWrite -Desc '关闭锁屏时的 Windows 聚焦推广' `
-    #    -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
-    #    -Name 'RotatingLockScreenEnable' `
-    #    -Value 0 `
-    #    -Type DWord
+    RegWrite -Desc '关闭锁屏时的 Windows 聚焦推广' `
+        -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
+        -Name 'RotatingLockScreenEnable' `
+        -Value 0 `
+        -Type DWord
 
-    #RegWrite -Desc '关闭使用 Windows 时获取技巧和建议' `
-    #    -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
-    #    -Name 'SoftLandingEnabled' `
-    #    -Value 0 `
-    #    -Type DWord
+    RegWrite -Desc '关闭使用 Windows 时获取技巧和建议' `
+        -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' `
+        -Name 'SoftLandingEnabled' `
+        -Value 0 `
+        -Type DWord
 
     RegWrite -Desc '关闭突出显示新安装的程序' `
         -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced' `
@@ -716,15 +716,14 @@ function CommonOptim {
         -Name 'ShowCortanaButton' `
         -Value 0 `
         -Type DWord `
-        -Exclude 11
-    RegWrite -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\default\Experience\AllowCortana' `
+        RegWrite -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\default\Experience\AllowCortana' `
         -Name 'Value' `
         -Value 0 `
         -Type DWord
-    #RegWrite -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Windows Search' `
-    #    -Name 'AllowCortana' `
-    #    -Value 0 `
-    #    -Type DWord
+    RegWrite -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Windows Search' `
+        -Name 'AllowCortana' `
+        -Value 0 `
+        -Type DWord
 
     RegWrite -Desc '打开资源管理器时显示此电脑' `
         -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced' `
@@ -806,106 +805,46 @@ function CommonOptim {
         -Value ([byte[]](0, 0, 0, 0)) `
         -Type Binary
 
-    #RegDelete -Desc '隐藏音乐文件夹' `
-    #    -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace' `
-    #        + '\{1CF1260C-4DD0-4ebb-811F-33C572699FDE}')
-    #RegDelete -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Explorer' `
-    #        + '\MyComputer\NameSpace\{1CF1260C-4DD0-4ebb-811F-33C572699FDE}')
     RegWrite -Desc '隐藏音乐文件夹' `
         -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\' `
             + 'FolderDescriptions\{a0c69a99-21c8-4671-8703-7934162fcf1d}\PropertyBag') `
         -Name 'ThisPCPolicy' `
         -Value 'Hide' `
         -Type String
-    #RegWrite -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\' `
-    #        + 'FolderDescriptions\{a0c69a99-21c8-4671-8703-7934162fcf1d}\PropertyBag') `
-    #    -Name 'ThisPCPolicy' `
-    #    -Value 'Hide' `
-    #    -Type String
 
-    #RegDelete -Desc '隐藏下载文件夹' `
-    #    -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace' `
-    #        + '\{374DE290-123F-4565-9164-39C4925E467B}')
-    #RegDelete -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Explorer' `
-    #        + '\MyComputer\NameSpace\{374DE290-123F-4565-9164-39C4925E467B}')
     RegWrite -Desc '隐藏下载文件夹' `
         -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\' `
             + 'FolderDescriptions\{7d83ee9b-2244-4e70-b1f5-5393042af1e4}\PropertyBag') `
         -Name 'ThisPCPolicy' `
         -Value 'Hide' `
         -Type String
-    #RegWrite -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\' `
-    #        + 'FolderDescriptions\{7d83ee9b-2244-4e70-b1f5-5393042af1e4}\PropertyBag') `
-    #    -Name 'ThisPCPolicy' `
-    #    -Value 'Hide' `
-    #    -Type String
 
-    #RegDelete -Desc '隐藏图片文件夹' `
-    #    -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace' `
-    #        + '\{3ADD1653-EB32-4cb0-BBD7-DFA0ABB5ACCA}')
-    #RegDelete -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Explorer' `
-    #        + '\MyComputer\NameSpace\{3ADD1653-EB32-4cb0-BBD7-DFA0ABB5ACCA}')
     RegWrite -Desc '隐藏图片文件夹' `
         -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\' `
             + 'FolderDescriptions\{0ddd015d-b06c-45d5-8c4c-f59713854639}\PropertyBag') `
         -Name 'ThisPCPolicy' `
         -Value 'Hide' `
         -Type String
-    #RegWrite -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\' `
-    #        + 'FolderDescriptions\{0ddd015d-b06c-45d5-8c4c-f59713854639}\PropertyBag') `
-    #    -Name 'ThisPCPolicy' `
-    #    -Value 'Hide' `
-    #    -Type String
 
-    #RegDelete -Desc '隐藏视频文件夹' `
-    #    -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace' `
-    #        + '\{A0953C92-50DC-43bf-BE83-3742FED03C9C}')
-    #RegDelete -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Explorer' `
-    #        + '\MyComputer\NameSpace\{A0953C92-50DC-43bf-BE83-3742FED03C9C}')
     RegWrite -Desc '隐藏视频文件夹' `
         -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\' `
             + 'FolderDescriptions\{35286a68-3c57-41a1-bbb1-0eae73d76c95}\PropertyBag') `
         -Name 'ThisPCPolicy' `
         -Value 'Hide' `
         -Type String
-    #RegWrite -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\' `
-    #        + 'FolderDescriptions\{35286a68-3c57-41a1-bbb1-0eae73d76c95}\PropertyBag') `
-    #    -Name 'ThisPCPolicy' `
-    #    -Value 'Hide' `
-    #    -Type String
 
-    #RegDelete -Desc '隐藏文档文件夹' `
-    #    -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace' `
-    #        + '\{A8CDFF1C-4878-43be-B5FD-F8091C1C60D0}')
-    #RegDelete -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Explorer' `
-    #        + '\MyComputer\NameSpace\{A8CDFF1C-4878-43be-B5FD-F8091C1C60D0}')
     RegWrite -Desc '隐藏文档文件夹' `
         -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\' `
             + 'FolderDescriptions\{f42ee2d3-909f-4907-8871-4c22fc0bf756}\PropertyBag') `
         -Name 'ThisPCPolicy' `
         -Value 'Hide' `
         -Type String
-    #RegWrite -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\' `
-    #        + 'FolderDescriptions\{f42ee2d3-909f-4907-8871-4c22fc0bf756}\PropertyBag') `
-    #    -Name 'ThisPCPolicy' `
-    #    -Value 'Hide' `
-    #    -Type String
 
     RegDelete -Desc '隐藏桌面文件夹' `
         -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace' `
             + '\{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}')
     RegDelete -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Explorer' `
             + '\MyComputer\NameSpace\{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}')
-    #RegWrite -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\' `
-    #        + 'FolderDescriptions\{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}\PropertyBag') `
-    #    -Name 'ThisPCPolicy' `
-    #    -Value 'Hide' `
-    #    -Type String
-    #RegWrite -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\' `
-    #        + 'FolderDescriptions\{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}\PropertyBag') `
-    #    -Name 'ThisPCPolicy' `
-    #    -Value 'Hide' `
-    #    -Type String
 
     RegWrite -Desc '隐藏 3D 对象文件夹' `
         -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\' `
@@ -914,17 +853,6 @@ function CommonOptim {
         -Value 'Hide' `
         -Type String `
         -Exclude 11
-    #RegWrite -Path ('Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\' `
-    #        + 'FolderDescriptions\{31C0DD25-9439-4F12-BF41-7FF4EDA38722}\PropertyBag') `
-    #    -Name 'ThisPCPolicy' `
-    #    -Value 'Hide' `
-    #    -Type String
-
-    #RegWrite -Desc '收起资源管理器功能区' `
-    #    -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Ribbon' `
-    #    -Name 'MinimizedStateTabletModeOff' `
-    #    -Value 1 `
-    #    -Type DWord
 
     RegWrite -Desc '快速访问不显示常用文件夹' `
         -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer' `
@@ -932,11 +860,11 @@ function CommonOptim {
         -Value 0 `
         -Type DWord
 
-    #RegWrite -Desc '快速访问不显示最近使用的文件' `
-    #    -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer' `
-    #    -Name 'ShowRecent' `
-    #    -Value 0 `
-    #    -Type DWord
+    RegWrite -Desc '快速访问不显示最近使用的文件' `
+        -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer' `
+        -Name 'ShowRecent' `
+        -Value 0 `
+        -Type DWord
 
     #RegWrite -Desc '隐藏语言栏到任务栏' `
     #    -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\CTF\LangBar' `
@@ -955,10 +883,10 @@ function CommonOptim {
     #    -Value 3 `
     #    -Type DWord
 
-    #RegWrite -Desc '禁用 Windows 11 加入的新右键菜单' `
-    #    -Path ('Registry::HKEY_CURRENT_USER\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}' `
-    #        + '\InprocServer32') `
-    #    -Exclude 10
+    RegWrite -Desc '禁用 Windows 11 加入的新右键菜单' `
+        -Path ('Registry::HKEY_CURRENT_USER\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}' `
+            + '\InprocServer32') `
+        -Exclude 10
 
     RegWrite -Desc '在桌面显示我的电脑' `
         -Path ('Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons' `
@@ -974,124 +902,20 @@ function CommonOptim {
     #    -Value 0 `
     #    -Type DWord
 
-    #RegDelete -Desc '禁用可执行文件的 "兼容性疑难解答" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\exefile\shellex\ContextMenuHandlers\Compatibility'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\Msi.Package\ShellEx\ContextMenuHandlers\Compatibility'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\lnkfile\shellex\ContextMenuHandlers\Compatibility'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\batfile\ShellEx\ContextMenuHandlers\Compatibility'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\cmdfile\ShellEx\ContextMenuHandlers\Compatibility'
-
-    #RegDelete -Desc '禁用磁盘的 "启用 Bitlocker" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\Drive\shell\encrypt-bde'
     RegDelete -Desc '禁用磁盘的 "启用 Bitlocker" 右键菜单' `
         -Path 'Registry::HKEY_CLASSES_ROOT\Drive\shell\encrypt-bde-elev'
 
     RegDelete -Desc '禁用磁盘的 "以便携式方式打开" 右键菜单' `
         -Path 'Registry::HKEY_CLASSES_ROOT\Drive\shellex\ContextMenuHandlers\{D6791A63-E7E2-4fee-BF52-5DED8E86E9B8}'
 
-    #RegDelete -Desc '禁用磁盘的 "复制磁盘" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\Drive\shellex\ContextMenuHandlers\{59099400-57FF-11CE-BD94-0020AF85B590}'
-
-    #RegDelete -Desc '禁用新建的 "联系人" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\.contact\ShellNew'
-
-    #RegDelete -Desc '禁用新建、文件以及文件夹的 "公文包" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\Briefcase\ShellNew'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\`*\shellex\ContextMenuHandlers\BriefcaseMenu'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\Folder\ShellEx\ContextMenuHandlers\BriefcaseMenu'
-
-    #RegDelete -Desc '禁用新建 "ZIP/RAR文件" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\.rar\ShellNew'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\.zip\ShellNew'
-
-    #RegDelete -Desc '禁用文件、磁盘以及属性的 "还原以前版本" 右键菜单' `
-    #    -Path ('Registry::HKEY_CLASSES_ROOT\AllFilesystemObjects\shellex\ContextMenuHandlers' `
-    #        + '\{596AB062-B4D2-4215-9F74-E9109B0A8153}')
-    #RegDelete -Path ('Registry::HKEY_CLASSES_ROOT\AllFilesystemObjects\shellex\PropertySheetHandlers' `
-    #        + '\{596AB062-B4D2-4215-9F74-E9109B0A8153}')
-    #RegDelete -Path ('Registry::HKEY_CLASSES_ROOT\CLSID\{450D8FBA-AD25-11D0-98A8-0800361B1103}\shellex' `
-    #        + '\ContextMenuHandlers\{596AB062-B4D2-4215-9F74-E9109B0A8153}')
-    #RegDelete -Path ('Registry::HKEY_CLASSES_ROOT\CLSID\{450D8FBA-AD25-11D0-98A8-0800361B1103}\shellex' `
-    #        + '\PropertySheetHandlers\{596AB062-B4D2-4215-9F74-E9109B0A8153}')
     RegDelete '禁用文件、磁盘以及属性的 "还原以前版本" 右键菜单' `
         -Path ('Registry::HKEY_CLASSES_ROOT\Directory\shellex\ContextMenuHandlers' `
             + '\{596AB062-B4D2-4215-9F74-E9109B0A8153}')
-    #RegDelete -Path ('Registry::HKEY_CLASSES_ROOT\Directory\shellex\PropertySheetHandlers' `
-    #        + '\{596AB062-B4D2-4215-9F74-E9109B0A8153}')
     RegDelete -Path ('Registry::HKEY_CLASSES_ROOT\Drive\shellex\ContextMenuHandlers' `
             + '\{596AB062-B4D2-4215-9F74-E9109B0A8153}')
-    #RegDelete -Path ('Registry::HKEY_CLASSES_ROOT\Drive\shellex\PropertySheetHandlers' `
-    #        + '\{596AB062-B4D2-4215-9F74-E9109B0A8153}')
-    #RegDelete -Path ('Registry::HKEY_CLASSES_ROOT\Wow6432Node\CLSID\{450D8FBA-AD25-11D0-98A8-0800361B1103}\shellex' `
-    #        + '\ContextMenuHandlers\{596AB062-B4D2-4215-9F74-E9109B0A8153}')
-    #RegDelete -Path ('Registry::HKEY_CLASSES_ROOT\Wow6432Node\CLSID\{450D8FBA-AD25-11D0-98A8-0800361B1103}\shellex' `
-    #        + '\PropertySheetHandlers\{596AB062-B4D2-4215-9F74-E9109B0A8153}')
-
-    #RegDelete -Desc '禁用桌面的 "小工具" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\Directory\Background\shellex\ContextMenuHandlers\Gadgets'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\DesktopBackground\Shell\Gadgets'
-
-    #RegDelete -Desc '禁用文件、文件夹、桌面以及所有对象的 "共享文件夹同步" 右键菜单' `
-    #    -Path ('Registry::HKEY_CLASSES_ROOT\Directory\Background\shellex\ContextMenuHandlers' `
-    #        + '\XXX Groove GFS Context Menu Handler XXX')
-    #RegDelete -Path ('Registry::HKEY_CLASSES_ROOT\`*\shellex\ContextMenuHandlers' `
-    #        + '\XXX Groove GFS Context Menu Handler XXX')
-    #RegDelete -Path ('Registry::HKEY_CLASSES_ROOT\Directory\shellex\ContextMenuHandlers' `
-    #        + '\XXX Groove GFS Context Menu Handler XXX')
-    #RegDelete -Path ('Registry::HKEY_CLASSES_ROOT\Folder\ShellEx\ContextMenuHandlers' `
-    #        + '\XXX Groove GFS Context Menu Handler XXX')
-    #RegDelete -Path ('Registry::HKEY_CLASSES_ROOT\AllFilesystemObjects\shellex\ContextMenuHandlers' `
-    #        + '\XXX Groove GFS Context Menu Handler XXX')
-
-    #RegDelete -Desc '禁用磁盘的 "刻录到光盘" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\Drive\shellex\ContextMenuHandlers\{fbeb8a05-beee-4442-804e-409d6c4515e9}'
 
     RegDelete -Desc '禁用所有对象的 "共享" 右键菜单' `
         -Path 'Registry::HKEY_CLASSES_ROOT\`*\shellex\ContextMenuHandlers\ModernSharing'
-
-    #RegDelete -Desc '禁用文件、目录、桌面、磁盘以及库的 "共享" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\`*\shellex\ContextMenuHandlers\Sharing'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\Directory\shellex\ContextMenuHandlers\Sharing'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\Directory\Background\shellex\ContextMenuHandlers\Sharing'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\Drive\shellex\ContextMenuHandlers\Sharing'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\LibraryFolder\background\shellex\ContextMenuHandlers\Sharing'
-
-    #RegDelete -Desc '禁用文件、目录、桌面、磁盘以及库的 "授予访问权限" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\`*\shellex\ContextMenuHandlers\Sharing'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\Directory\shellex\ContextMenuHandlers\Sharing'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\Directory\Background\shellex\ContextMenuHandlers\Sharing'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\Drive\shellex\ContextMenuHandlers\Sharing'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\LibraryFolder\background\shellex\ContextMenuHandlers\Sharing'
-
-    #RegDelete -Desc '禁用目录、文件夹、所有对象、的 "始终脱机可用" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\Directory\shellex\ContextMenuHandlers\Offline Files'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\Folder\ShellEx\ContextMenuHandlers\Offline Files'
-    #RegDelete -Path ('Registry::HKEY_CLASSES_ROOT\AllFilesystemObjects\shellex\ContextMenuHandlers' `
-    #        + '\{474C98EE-CF3D-41f5-80E3-4AAB0AB04301}')
-
-    #RegDelete -Desc '禁用文件的 "OneDrive 文件同步" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\`*\shellex\ContextMenuHandlers\ FileSyncEx'
-
-    #RegDelete -Desc '禁用文件的 "View 3D" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\Shell\T3D Print'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\Shell\T3D Print'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.png\Shell\T3D Print'
-
-    #RegDelete -Desc '禁用文件的 "画图 3D" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.tiff\Shell\3D Edit'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.tif\Shell\3D Edit'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.png\Shell\3D Edit'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\Shell\3D Edit'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\Shell\3D Edit'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.jpe\Shell\3D Edit'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.jfif\Shell\3D Edit'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.gif\Shell\3D Edit'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.fbx\Shell\3D Edit'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\Shell\3D Edit'
-    #RegDelete -Path 'Registry::HKEY_CLASSES_ROOT\SystemFileAssociations\.3mf\Shell\3D Edit'
-
-    #RegDelete -Desc '禁用文件夹的 "包含到库中" 右键菜单' `
-    #    -Path 'Registry::HKEY_CLASSES_ROOT\Folder\shellex\ContextMenuHandlers\Library Location'
 
     RegDelete -Desc '禁用右键新建 BMP 图像' `
         -Path 'Registry::HKEY_CLASSES_ROOT\.bmp\ShellNew' `
@@ -1629,11 +1453,13 @@ function MainMenu {
     }
     if ('Debug' -ieq $InputOption) {
         $Script:Debug = $true
-        Add-Content -Path $script:DebugLog -Value '' -Force
-        Add-Content -Path $script:DebugLog -Value '' -Force
-        Add-Content -Path $script:DebugLog -Value '' -Force
+        Add-Content -Path "$script:DebugLog" -Value '' -Force
+        Add-Content -Path "$script:DebugLog" -Value '' -Force
+        Add-Content -Path "$script:DebugLog" -Value '' -Force
         $LogHead = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-        Add-Content -Path $script:DebugLog -Value "$LogHead" -Force
+        Add-Content -Path "$script:DebugLog" -Value "$LogHead" -Force
+        Add-Content -Path "$script:DebugLog" -Value '' -Force
+        Get-AppxPackage | ForEach-Object { Add-Content -Path "$script:DebugLog" -Value $_.Name -Force }
         MainMenu
     }
 }
@@ -1656,6 +1482,6 @@ RequireAdmin
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 $ProgressPreference = 'SilentlyContinue'
 $Host.UI.RawUI.WindowTitle = "WinOptim v$VersionInfo"
-Set-Location -Path $PSScriptRoot
+Set-Location -Path "$PSScriptRoot"
 
 MainMenu
