@@ -519,7 +519,7 @@ function UninstallXbox {
     UninstallApp -AppName 'Microsoft.XboxGameOverlay'
     UninstallApp -AppName 'Microsoft.XboxApp'
     UninstallApp -AppName 'Microsoft.Xbox.TCUI'
-    #UninstallApp -AppName 'Microsoft.GamingApp'
+    UninstallApp -AppName 'Microsoft.GamingApp'
 
     RegWrite -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\GameBar' `
         -Name 'AutoGameModeEnabled' `
@@ -715,8 +715,8 @@ function CommonOptim {
         -Path 'Registry::HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced' `
         -Name 'ShowCortanaButton' `
         -Value 0 `
-        -Type DWord `
-        RegWrite -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\default\Experience\AllowCortana' `
+        -Type DWord
+    RegWrite -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\default\Experience\AllowCortana' `
         -Name 'Value' `
         -Value 0 `
         -Type DWord
