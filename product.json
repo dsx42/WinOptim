@@ -1,6 +1,6 @@
 {
     "name": "WinOptim",
-    "version": "2022.9.12",
+    "version": "2022.9.14",
     "author": "dsx42",
     "license": "GPL-3.0",
     "home": "https://github.com/dsx42/WinOptim",
@@ -11,8 +11,5 @@
         "LICENSE",
         "README.md",
         "Blank.ico"
-    ],
-    "dependencies": {
-        "Blank.ico": "https://github.com/Chuyu-Team/Dism-Multi-language/releases/tag/v10.1.1002.1"
-    }
+    ]
 }

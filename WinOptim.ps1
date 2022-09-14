@@ -1,4 +1,8 @@
-﻿function RequireAdmin {
+﻿param(
+    [switch]$Version
+)
+
+function RequireAdmin {
     $CurrentWindowsID = [System.Security.Principal.WindowsIdentity]::GetCurrent()
     $CurrentWindowsPrincipal = New-Object -TypeName System.Security.Principal.WindowsPrincipal `
         -ArgumentList $CurrentWindowsID
@@ -1327,12 +1331,12 @@ function ChangePower {
 }
 
 function CreateShortcut {
-    param ($Type)
+    param ([switch]$Desktop)
 
     Clear-Host
 
     $TargetPath = [System.Environment]::GetFolderPath([Environment+SpecialFolder]::Programs) + '\WinOptim.lnk'
-    if ($Type -eq 1) {
+    if ($Desktop) {
         $TargetPath = [System.Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop) + '\WinOptim.lnk'
     }
 
@@ -1348,7 +1352,12 @@ function CreateShortcut {
     $Shortcut.Save()
 
     Write-Host -Object ''
-    Write-Host -Object '快捷方式创建完成'
+    if ($Desktop) {
+        Write-Host -Object '桌面快捷方式创建完成' -ForegroundColor Green
+        return
+    }
+
+    Write-Host -Object '开始菜单快捷方式创建完成' -ForegroundColor Green
 }
 
 function MainMenu {
@@ -1370,7 +1379,8 @@ function MainMenu {
 
     Write-Host -Object ''
     if ($script:Debug) {
-        Write-Host -Object "=====> WinOptim 调试模式 v$VersionInfo https://github.com/dsx42/WinOptim <====="
+        Write-Host -Object "=====> WinOptim 调试模式 v$VersionInfo https://github.com/dsx42/WinOptim <=====" `
+            -ForegroundColor Yellow
     }
     else {
         Write-Host -Object "=====> WinOptim v$VersionInfo https://github.com/dsx42/WinOptim <====="
@@ -1440,13 +1450,13 @@ function MainMenu {
         MainMenu
     }
     if ('6' -eq $InputOption) {
-        CreateShortcut -Type 1
+        CreateShortcut -Desktop
         Write-Host -Object ''
         Read-Host -Prompt '按确认键返回主菜单'
         MainMenu
     }
     if ('7' -eq $InputOption) {
-        CreateShortcut -Type 2
+        CreateShortcut
         Write-Host -Object ''
         Read-Host -Prompt '按确认键返回主菜单'
         MainMenu
