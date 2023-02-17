@@ -8,7 +8,7 @@
 
 # 下载
 
-从以下链接下载最新的版本：`WinOptim_版本号.zip`
+从以下链接下载最新的版本：`WinOptim_v2022.9.17.zip`
 
 > https://github.com/dsx42/WinOptim/releases
 
